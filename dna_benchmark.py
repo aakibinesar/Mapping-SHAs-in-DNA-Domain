@@ -179,8 +179,8 @@ def run_benchmark():
     
     # Benchmark configuration
     test_sizes = [64, 256, 512, 1024]
-    iterations = 30  # Increased for better statistical significance
-    random.seed(0)
+    iterations = 1000  # Increased for better statistical significance
+    random.seed(42)
     
     # Generate test data
     test_data = {
