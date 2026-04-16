@@ -9,10 +9,10 @@ Compares three types of hash implementations:
 3. DNA-Optimized (DNA-Opt) - Nucleotide-aligned DNA hash variants
 
 Tests all 4 algorithm families:
-- SHA2-256 / DNSHA2-256 / DNA-Opt-SHA2-256
-- SHA2-512 / DNSHA2-512 / DNA-Opt-SHA2-512
-- SHA3-256 / DNSHA3-256 / DNA-Opt-SHA3-256
-- SHA3-512 / DNSHA3-512 / DNA-Opt-SHA3-512
+- SHA2-256 / DNSHA2-256 / DNA-Variant-SHA2-256
+- SHA2-512 / DNSHA2-512 / DNA-Variant-SHA2-512
+- SHA3-256 / DNSHA3-256 / DNA-Variant-SHA3-256
+- SHA3-512 / DNSHA3-512 / DNA-Variant-SHA3-512
 
 Updated: Includes standard deviation and 95% confidence intervals for all timing measurements.
 """
