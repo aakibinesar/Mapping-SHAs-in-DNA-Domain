@@ -1590,40 +1590,13 @@ def run_classical_sha_tests(num_trials=200, random_seed=42):
     
     return results
 
-
-# Classical SHA reference values - COMPILED FROM ACTUAL HASHLIB TESTS
-# Run with 200 samples each, seed=42 for reproducibility
-# To regenerate, call: run_classical_sha_tests(num_trials=200, random_seed=42)
-# Or set REGENERATE_CLASSICAL_TESTS=True in main()
-CLASSICAL_SHA_REFERENCE = {
-    'SHA2-256': {
-        'avalanche': 49.78,              # ± 3.01% (200 samples)
-        'corruption_detection': 100.0,   # % detected
-        'deterministic': 100.0,          # % consistency
-    },
-    'SHA2-512': {
-        'avalanche': 50.05,              # ± 2.34% (200 samples)
-        'corruption_detection': 100.0,   # % detected
-        'deterministic': 100.0,          # % consistency
-    },
-    'SHA3-256': {
-        'avalanche': 50.57,              # ± 3.07% (200 samples)
-        'corruption_detection': 100.0,   # % detected
-        'deterministic': 100.0,          # % consistency
-    },
-    'SHA3-512': {
-        'avalanche': 49.82,              # ± 2.29% (200 samples)
-        'corruption_detection': 100.0,   # % detected
-        'deterministic': 100.0,          # % consistency
-    },
-}
-
-
-def get_classical_comparison(test_name: str, dna_value: float, algo_name: str) -> str:
+def get_classical_comparison(test_name: str, dna_value: float, algo_name: str, classical_ref: dict) -> str:
     """Get comparison string between DNA SHA and Classical SHA"""
+    if not classical_ref:
+        return ""
     # Map algorithm name to reference key
     ref_key = algo_name.replace('DN', '')  # DNSHA2-256 -> SHA2-256
-    ref = CLASSICAL_SHA_REFERENCE.get(ref_key, CLASSICAL_SHA_REFERENCE['SHA2-256'])
+    ref = classical_ref.get(ref_key, classical_ref.get('SHA2-256', {}))
     
     if 'Avalanche' in test_name:
         classical = ref['avalanche']
@@ -1640,9 +1613,7 @@ def get_classical_comparison(test_name: str, dna_value: float, algo_name: str) -
     
     return ""
 
-
-
-def generate_comprehensive_report(results: List[TestResult]) -> str:
+def generate_comprehensive_report(results: List[TestResult], classical_ref: dict = None) -> str:
     """Generate comprehensive report with classical SHA comparisons"""
     report = []
     report.append("=" * 100)
@@ -1708,15 +1679,15 @@ def generate_comprehensive_report(results: List[TestResult]) -> str:
                     ci_lower = metric_value - margin_error
                     ci_upper = metric_value + margin_error
                     # Enhance comparison string with CI
-                    comparison_base = get_classical_comparison(result.test_name, metric_value, algorithm)
+                    comparison_base = get_classical_comparison(result.test_name, metric_value, algorithm, classical_ref or {})
                     comparison = f"{comparison_base.split(' vs ')[0]} (95% CI: [{ci_lower:.2f}%, {ci_upper:.2f}%], trials: {trials}) vs {comparison_base.split(' vs ')[1] if ' vs ' in comparison_base else ''}"
                 else:
-                    comparison = get_classical_comparison(result.test_name, metric_value, algorithm)
+                    comparison = get_classical_comparison(result.test_name, metric_value, algorithm, classical_ref or {})
             else:
                 metric_value = result.score
             
             if 'Avalanche' not in result.test_name:
-                comparison = get_classical_comparison(result.test_name, metric_value, algorithm)
+                comparison = get_classical_comparison(result.test_name, metric_value, algorithm, classical_ref or {})
             report.append(f"    {result.test_name}:")
             report.append(f"      {comparison}")
     
@@ -1819,12 +1790,10 @@ def main():
     # =============================================================================
     # OPTION: Regenerate Classical SHA Reference Values
     # =============================================================================
-    # Set this to True to regenerate CLASSICAL_SHA_REFERENCE from actual tests
-    # When True, runs tests and uses fresh values automatically (no manual copy needed)
+    # Always set to True — runs classical SHA tests at N=10,000 and passes results to report
+    # Set to False only to skip classical SHA re-run (report will show no classical comparisons)
     REGENERATE_CLASSICAL_TESTS = True  # Set to True to regenerate
-    
-    # Global reference that will be used for comparisons
-    global CLASSICAL_SHA_REFERENCE
+    new_classical_ref = {}
     
     if REGENERATE_CLASSICAL_TESTS:
         print("\n" + "="*90)
@@ -1832,11 +1801,8 @@ def main():
         print("="*90 + "\n")
         
         # Run tests and get fresh values
-        new_classical_ref = run_classical_sha_tests(num_trials=200, random_seed=42)
-        
-        # Automatically use the fresh values for this run
-        CLASSICAL_SHA_REFERENCE = new_classical_ref
-        
+        new_classical_ref = run_classical_sha_tests(num_trials=10000, random_seed=42)
+            
         print("\n" + "="*90)
         print("Fresh classical SHA values generated and loaded for this run.")
         print("="*90 + "\n")
@@ -1891,7 +1857,7 @@ def main():
     print("GENERATING COMPREHENSIVE REPORT")
     print("="*90 + "\n")
     
-    report = generate_comprehensive_report(all_results)
+    report = generate_comprehensive_report(all_results, new_classical_ref)
     print(report)
     
     # Classical SHA Verification for ALL 4 algorithms
@@ -1967,7 +1933,7 @@ def main():
     if all_verified and nassr_match:
         print("ALL VERIFICATIONS PASSED")
     else:
-        print("SOME VERIFICATIONS FAILED”")
+        print("SOME VERIFICATIONS FAILED")
     print("="*90)
     
     return all_results
