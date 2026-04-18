@@ -1059,7 +1059,7 @@ def generate_report(results):
         for x in ar:
             if "Avalanche" in x.test_name:
                 hamming_pct = x.details.get('hamming_percent', 0)
-                trials = x.details.get('trials_completed', 200)
+                trials = x.details.get('trials_completed', 10000)
                 # Calculate 95% confidence interval
                 std_error = math.sqrt((hamming_pct * (100 - hamming_pct)) / trials)
                 margin_error = 1.96 * std_error
